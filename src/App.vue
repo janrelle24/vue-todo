@@ -1,20 +1,93 @@
 <template>
   <div class="wrapper">
     <div class="task-input">
-      <input type="text" placeholder="Add new Todo">
+      <input type="text" v-model="newTodo" v-if="editIndex !== index" @keyup.enter="addTodo" placeholder="Add new Todo">
+      <input type="text" v-model="newTodo" v-else-if="editIndex !== index" @keyup.enter="aupdateTask" placeholder="EditTodo">
     </div>
     <div class="controls">
       <div class="filters">
-        <span class="active" id="all">All</span>
-        <span id="peding">Pending</span>
-        <span id="completed">Completed</span>
+        <span @click="filter = 'all'" :class="{'active': filter === 'all'}">All</span>
+        <span @click="filter = 'pending'" :class="{'active': filter === 'pending'}">Pending</span>
+        <span @click="filter = 'completed'" :class="{'active': filter === 'completed'}">Completed</span>
       </div>
-      <button class="clear-btn">Clear All</button>
+      <button class="clear-btn" @click="clearAll">Clear All</button>
     </div>
-    <ul class="task-box"></ul>
+    <ul class="task-box">
+      <li v-for="(todo, index) in filteredTodos" :key="index" class="task">
+        <label :for="index">
+          <input type="checkbox" v-model="todo.done">
+          <span :class="{ 'done': todo.done }">{{ todo.text }}</span>
+        </label>
+        <div class="settings">
+          <i class="uil uil-ellipsis-h" @click="showContextMenu(index)"></i>
+          <ul v-if="showContextMenuFor === index"  class="task-menu">
+            <li @click="editTask(index, todo.text)"><i class="uil uil-pen"></i>Edit</li>
+            <li @click="deleteTask(index)"><i class="uil uil-trash"></i>Delete</li>
+          </ul>
+        </div>
+      </li>
+    </ul>
   </div>
 </template>
+<script>
+export default{
+  name: 'Todo',
+  data(){
+    return{
+      newTodo: '',
+      todos: [],
+      filter: 'all',
+      showContextMenuFor: null,
+      editIndex: null,
+    };
+  },
+  computed: {
+    filteredTodos: function(){
+      if(this.filter === 'all'){
+        return this.todos;
+      }else if(this.filter === 'pending'){
+        return this.todos.filter(todo => !todo.done);
+      }else if(this.filter === 'completed'){
+        return this.todos.filter(todo => todo.done);
+      }
+    }
+  },
+  methods: {
 
+    addTodo: function() {
+      if(this.newTodo.trim() !==''){
+        this.todos.push({ text: this.newTodo.trim(), done: false });
+        this.newTodo = '';
+      }
+    },
+    toggleStatus: function(index){
+      this.todos[index].done = !this.todos[index].done;
+    },
+    clearAll: function() {
+      this.todos = [];
+    },
+    showContextMenu: function(index){
+      this.showContextMenuFor = this.showContextMenuFor === index ? null : index;
+    },
+    editTask: function(index, text) {
+      this.newTodo = text;
+      this.editIndex = index;
+    },
+    updateTask: function() {
+      if (this.newTodo.trim() !== '') {
+        this.todos[this.editIndex].text = this.newTodo.trim();
+        this.newTodo = '';
+        this.editIndex = null;
+      }
+    },
+    deleteTask: function(index) {
+      this.todos.splice(index, 1);
+    },
+
+  }
+
+}
+</script>
 <style>
 /* Import Google Font - Poppins */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
@@ -100,17 +173,19 @@ body{
   padding: 7px 13px;
   border-radius: 4px;
   letter-spacing: 0.3px;
-  pointer-events: none;
+  /*pointer-events: none;*/
   transition: transform 0.25s ease;
   background: linear-gradient(135deg, #1798fb 0%, #2D5CFE 100%);
 }
+
 .clear-btn.active{
   opacity: 0.9;
   pointer-events: auto;
 }
+/*
 .clear-btn:active{
   transform: scale(0.93);
-}
+}*/
 .task-box{
   margin-top: 20px;
   margin-right: 5px;
@@ -207,6 +282,9 @@ body{
 .settings li i{
   padding-right: 8px;
 }
+.done {
+    text-decoration: line-through;
+}
 
 @media (max-width: 400px) {
   body{
@@ -232,5 +310,6 @@ body{
   .task label input{
     margin-top: 4px;
   }
+  
 }
 </style>
