@@ -1,8 +1,8 @@
 <template>
   <div class="wrapper">
     <div class="task-input">
-      <input type="text" v-model="newTodo" v-if="editIndex !== index" @keyup.enter="addTodo" placeholder="Add new Todo">
-      <input type="text" v-model="newTodo" v-else-if="editIndex !== index" @keyup.enter="aupdateTask" placeholder="EditTodo">
+      <input type="text" v-model="newTodo" v-if="!isEditing" @keyup.enter="addTodo" placeholder="Add new Todo">
+      <input type="text" v-model="newTodo" v-else @keyup.enter="updateTask" placeholder="EditTodo">
     </div>
     <div class="controls">
       <div class="filters">
@@ -13,23 +13,36 @@
       <button class="clear-btn" @click="clearAll">Clear All</button>
     </div>
     <ul class="task-box">
+      <li v-if="!todos.length">
+        <span>You don't have any tasks here</span>
+      </li>
       <li v-for="(todo, index) in filteredTodos" :key="index" class="task">
         <label :for="index">
           <input type="checkbox" v-model="todo.done">
           <span :class="{ 'done': todo.done }">{{ todo.text }}</span>
         </label>
+        
         <div class="settings">
-          <i class="uil uil-ellipsis-h" @click="showContextMenu(index)"></i>
-          <ul v-if="showContextMenuFor === index"  class="task-menu">
-            <li @click="editTask(index, todo.text)"><i class="uil uil-pen"></i>Edit</li>
-            <li @click="deleteTask(index)"><i class="uil uil-trash"></i>Delete</li>
-          </ul>
+            <li @click="editTask(index, todo.text)"><i class="uil uil-pen"></i></li>
+            <li @click="deleteTask(index)"><i class="uil uil-trash"></i></li>
         </div>
+        
+        <!--
+        <div class="settings">
+          <span class="ellipsis" @click="toggleMenu(index)">
+            <i class="uil uil-ellipsis-h"></i>
+          </span>
+          <div v-if="menuOpen[index]" class="task-menu">
+            <li @click="editTask(index, todo.text)"><i class="uil uil-pen"></i></li>
+            <li @click="deleteTask(index)"><i class="uil uil-trash"></i></li>
+          </div>
+        </div>-->
       </li>
     </ul>
   </div>
 </template>
 <script>
+
 export default{
   name: 'Todo',
   data(){
@@ -37,8 +50,10 @@ export default{
       newTodo: '',
       todos: [],
       filter: 'all',
-      showContextMenuFor: null,
       editIndex: null,
+      isEditing: false,
+      editTodo: { text: '', done: false },
+      /*menuOpen: []*/
     };
   },
   computed: {
@@ -63,21 +78,23 @@ export default{
     toggleStatus: function(index){
       this.todos[index].done = !this.todos[index].done;
     },
+    /*toggleMenu(index) {
+      // Toggle menu state for the clicked task
+      Vue.set(this.menuOpen, index, !this.menuOpen[index]);
+    },*/
     clearAll: function() {
       this.todos = [];
     },
-    showContextMenu: function(index){
-      this.showContextMenuFor = this.showContextMenuFor === index ? null : index;
-    },
-    editTask: function(index, text) {
-      this.newTodo = text;
+    editTask: function(index) {
       this.editIndex = index;
+      this.newTodo = this.todos[index].text;
+      this.isEditing = true;
     },
     updateTask: function() {
       if (this.newTodo.trim() !== '') {
         this.todos[this.editIndex].text = this.newTodo.trim();
         this.newTodo = '';
-        this.editIndex = null;
+        this.isEditing = false;
       }
     },
     deleteTask: function(index) {
@@ -85,9 +102,11 @@ export default{
     },
 
   }
+  
 
 }
 </script>
+
 <style>
 /* Import Google Font - Poppins */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
@@ -182,10 +201,9 @@ body{
   opacity: 0.9;
   pointer-events: auto;
 }
-/*
 .clear-btn:active{
   transform: scale(0.93);
-}*/
+}
 .task-box{
   margin-top: 20px;
   margin-right: 5px;
