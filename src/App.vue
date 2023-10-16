@@ -1,8 +1,10 @@
 <template>
   <div class="wrapper">
     <div class="task-input">
-      <input type="text" v-model="newTodo" v-if="!isEditing" @keyup.enter="addTodo" placeholder="Add new Todo">
-      <input type="text" v-model="newTodo" v-else @keyup.enter="updateTask" placeholder="EditTodo">
+      <label :for="isEditing ? 'editTodo' : 'newTodo'">
+        <input type="text" v-model="newTodo" v-if="!isEditing" @keyup.enter="addTodo" placeholder="Add new Todo" id="newTodo">
+        <input type="text" v-model="newTodo" v-else @keyup.enter="updateTask" placeholder="EditTodo" id="editTodo">
+      </label>
     </div>
     <div class="controls">
       <div class="filters">
@@ -17,14 +19,18 @@
         <span>You don't have any tasks here</span>
       </li>
       <li v-for="(todo, index) in filteredTodos" :key="index" class="task">
-        <label :for="index">
+        
+        <label :for="index" class="task-label">
           <input type="checkbox" v-model="todo.done">
           <span :class="{ 'done': todo.done }">{{ todo.text }}</span>
         </label>
         
+        
         <div class="settings">
-            <li @click="editTask(index, todo.text)"><i class="uil uil-pen"></i></li>
-            <li @click="deleteTask(index)"><i class="uil uil-trash"></i></li>
+          <div class="horizontal-icons">
+            <li @click="editTask(index, todo.text)"><i class="uil uil-pen edit-icon">Edit</i></li>
+            <li @click="deleteTask(index)"><i class="uil uil-trash delete-icon">Delete</i></li>
+          </div>
         </div>
         
         <!--
@@ -32,11 +38,12 @@
           <span class="ellipsis" @click="toggleMenu(index)">
             <i class="uil uil-ellipsis-h"></i>
           </span>
-          <div v-if="menuOpen[index]" class="task-menu">
+          <div v-if="menuOpen && editIndex === index" class="task-menu">
             <li @click="editTask(index, todo.text)"><i class="uil uil-pen"></i></li>
             <li @click="deleteTask(index)"><i class="uil uil-trash"></i></li>
           </div>
-        </div>-->
+        </div>
+        -->
       </li>
     </ul>
   </div>
@@ -53,7 +60,7 @@ export default{
       editIndex: null,
       isEditing: false,
       editTodo: { text: '', done: false },
-      /*menuOpen: []*/
+      menuOpen: false,
     };
   },
   computed: {
@@ -78,9 +85,14 @@ export default{
     toggleStatus: function(index){
       this.todos[index].done = !this.todos[index].done;
     },
-    /*toggleMenu(index) {
-      // Toggle menu state for the clicked task
-      Vue.set(this.menuOpen, index, !this.menuOpen[index]);
+    /*
+    toggleMenu(index) {
+      if(this.editIndex === index){
+        this.menuOpen = !this.menuOpen;
+      }else{
+        this.menuOpen = true;
+      }
+      this.editIndex = index;
     },*/
     clearAll: function() {
       this.todos = [];
@@ -126,6 +138,35 @@ body{
   color: #fff;
   background: #b13cff;
 }
+/** Horizontal icons*/
+.horizontal-icons {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+}
+
+.horizontal-icons li {
+  margin-right: 10px; /* Adjust the spacing between icons */
+}
+.edit-icon:hover{
+  color:#2D5CFE;
+}
+.delete-icon:hover {
+  color: red;
+}
+.task-label {
+  display: flex; /* Make the label a flex container */
+  align-items: center; /* Align items vertically */
+  cursor: pointer;
+}
+
+.task-label input[type="checkbox"] {
+  margin-right: 10px; /* Add right margin to create space between checkbox and label */
+  cursor: pointer;
+}
+/**End */
+
 .wrapper{
   max-width: 405px;
   padding: 28px 0 30px;
@@ -194,9 +235,11 @@ body{
   letter-spacing: 0.3px;
   /*pointer-events: none;*/
   transition: transform 0.25s ease;
-  background: linear-gradient(135deg, #1798fb 0%, #2D5CFE 100%);
+  background: linear-gradient(135deg, #033861 0%, #021868 100%);
 }
-
+.controls .clear-btn:hover{
+  background: #4AB1FF;
+}
 .clear-btn.active{
   opacity: 0.9;
   pointer-events: auto;
@@ -204,6 +247,7 @@ body{
 .clear-btn:active{
   transform: scale(0.93);
 }
+
 .task-box{
   margin-top: 20px;
   margin-right: 5px;
